@@ -3,7 +3,7 @@ import math
 import pandas as pd
 from datetime import timedelta, date
 import holidays
-
+import numpy as np
 
 # NOTES
 # 2023 will be a 53 week year.
@@ -37,6 +37,9 @@ calendar_dictionary = {
         "holidays": [],
     },
 }
+
+FOUR_WEEK_MONTHS = []
+FIVE_WEEK_MONTHS = []
 
 
 class CompanyTime:
@@ -106,6 +109,9 @@ class CompanyTime:
 
     def _get_calendar_week(self, d):
         return self.week_from_date(d)
+
+    def _get_year(self, d):
+        return d.strftime("%Y")
 
     def _get_weekday(self, d):
         return d.strftime("%A")
@@ -197,6 +203,66 @@ class CompanyTime:
         fiscal_year_start_date = first_feb_friday - timedelta(days=6)
         return fiscal_year_start_date
 
+    def _get_walmart_month(self, d):
+        walmart_month_index = {
+            "01": "February",
+            "02": "February",
+            "03": "February",
+            "04": "February",
+            "05": "March",
+            "06": "March",
+            "07": "March",
+            "08": "March",
+            "09": "March",
+            "10": "April",
+            "11": "April",
+            "12": "April",
+            "13": "April",
+            "14": "May",
+            "15": "May",
+            "16": "May",
+            "17": "May",
+            "18": "June",
+            "19": "June",
+            "20": "June",
+            "21": "June",
+            "22": "June",
+            "23": "July",
+            "24": "July",
+            "25": "July",
+            "26": "July",
+            "27": "August",
+            "28": "August",
+            "29": "August",
+            "30": "August",
+            "31": "September",
+            "32": "September",
+            "33": "September",
+            "34": "September",
+            "35": "September",
+            "36": "October",
+            "37": "October",
+            "38": "October",
+            "39": "October",
+            "40": "November",
+            "41": "November",
+            "42": "November",
+            "43": "November",
+            "44": "December",
+            "45": "December",
+            "46": "December",
+            "47": "December",
+            "48": "December",
+            "49": "January",
+            "50": "January",
+            "51": "January",
+            "52": "January",
+            "53": "January",
+        }
+        walmart_week_number = str(d)[-2:]
+
+        return walmart_month_index[walmart_week_number]
+
     def calendar_dataframe(self, df=pd.DataFrame(), col="calendar_date", ticker=""):
         """
         return a company calendar modified dataframe
@@ -204,11 +270,13 @@ class CompanyTime:
         if ticker == "":  # so, we will want to modify our output based on json input
             pass
 
+        df["year"] = df[col].map(self._get_year)
         df["walmart_week"] = df[col].map(self.get_walmart_week)
         df["calendar_week"] = df[col].map(self._get_calendar_week)
         df["month"] = df[col].map(self._get_month)
         df["calendar_monthday"] = df[col].map(self._get_monthday)
         df["calendar_weekday"] = df[col].map(self._get_weekday)
+        df["walmart_month"] = df["walmart_week"].map(self._get_walmart_month)
         df = pd.merge(
             df,
             self.holidays,
@@ -216,4 +284,5 @@ class CompanyTime:
             left_on="calendar_date",
             right_on="holiday_date",
         )
+
         return df
