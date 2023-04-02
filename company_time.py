@@ -2,6 +2,7 @@ from datetime import date, timedelta
 import math
 import pandas as pd
 from datetime import timedelta, date
+import holidays
 
 
 # NOTES
@@ -42,6 +43,16 @@ class CompanyTime:
     """
     A class to handle calendar to fiscal conversions
     """
+
+    def __init__(self, ticker=""):
+        self.ticker = ticker
+
+        holiday_list = []
+        for holiday in holidays.UnitedStates(years=[2022, 2023, 2024]).items():
+            holiday_list.append(holiday)
+        self.holidays = pd.DataFrame(
+            holiday_list, columns=["holiday_date", "holiday_name"]
+        )
 
     def gregorian_calendar_dataframe(
         self, start_date="01-01-2020", end_date="01-01-2021"
@@ -198,4 +209,11 @@ class CompanyTime:
         df["month"] = df[col].map(self._get_month)
         df["calendar_monthday"] = df[col].map(self._get_monthday)
         df["calendar_weekday"] = df[col].map(self._get_weekday)
+        df = pd.merge(
+            df,
+            self.holidays,
+            how="left",
+            left_on="calendar_date",
+            right_on="holiday_date",
+        )
         return df
