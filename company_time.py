@@ -104,8 +104,11 @@ class CompanyTime:
         week1_start_ordinal = jan1_ordinal - ((jan1_weekday + 1) % 7)
         return week1_start_ordinal
 
+    def _get_walmart_year(self, d):
+        return str(d)[:4]
+
     def _get_walmart_week(self, d):
-        return self.get_walmart_week(d)
+        return str(d)[-2:]
 
     def _get_calendar_week(self, d):
         return self.week_from_date(d)
@@ -122,7 +125,7 @@ class CompanyTime:
     def _get_monthday(self, d):
         return d.strftime("%d")
 
-    def get_walmart_week(self, d):
+    def get_walmart_year_week(self, d):
         """
         If no date is passed in, the methods defaults to today.
         """
@@ -270,13 +273,16 @@ class CompanyTime:
         if ticker == "":  # so, we will want to modify our output based on json input
             pass
 
-        df["year"] = df[col].map(self._get_year)
-        df["walmart_week"] = df[col].map(self.get_walmart_week)
+        df["calendar_year"] = df[col].map(self._get_year)
+        df["walmart_year_week"] = df[col].map(self.get_walmart_year_week)
+        df["walmart_week"] = df["walmart_year_week"].map(self._get_walmart_week)
+        df["walmart_month"] = df["walmart_year_week"].map(self._get_walmart_month)
+        df["walmart_year"] = df["walmart_year_week"].map(self._get_walmart_year)
         df["calendar_week"] = df[col].map(self._get_calendar_week)
-        df["month"] = df[col].map(self._get_month)
+        df["calendar_month"] = df[col].map(self._get_month)
         df["calendar_monthday"] = df[col].map(self._get_monthday)
         df["calendar_weekday"] = df[col].map(self._get_weekday)
-        df["walmart_month"] = df["walmart_week"].map(self._get_walmart_month)
+
         df = pd.merge(
             df,
             self.holidays,
